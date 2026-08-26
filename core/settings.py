@@ -19,7 +19,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-i85!#n=9#^i^4d%$)b-kp
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # Server IP yoki Domenizni .env orqali belgilang (Masalan: ALLOWED_HOSTS=yourdomain.com,123.45.67.89)
-ALLOWED_HOSTS = ['onlines-hop.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["*"]
 
 # Real domenlar uchun CSRF xavfsizligi
 CSRF_TRUSTED_ORIGINS = [
@@ -266,3 +266,4 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
