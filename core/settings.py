@@ -259,3 +259,10 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
     "dark_mode_theme": "darkly",
 }
+ALLOWED_HOSTS = ['onlines-shop.onrender.com', '.onrender.com', 'localhost', '127.0.0.1']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://onlines-shop.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
