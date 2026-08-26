@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Shop - Bosh sahifa</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Card animations and styling */
+        .product-card { 
+            transition: all 0.3s ease; 
+            border: none; 
+            border-radius: 16px; 
+            overflow: hidden;
+            background: #ffffff;
+        }
+        .product-card:hover { 
+            transform: translateY(-6px); 
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important;
+        }
+        .product-img { 
+            height: 220px; 
+            object-fit: cover; 
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* Category badge style */
+        .category-badge {
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* AI Chatbot Widget Styles */
+        #ai-chat-btn { 
+            position: fixed; 
+            bottom: 25px; 
+            right: 25px; 
+            z-index: 1000; 
+            border-radius: 50%; 
+            width: 60px; 
+            height: 60px; 
+            box-shadow: 0 6px 16px rgba(13, 110, 253, 0.35); 
+            transition: transform 0.2s;
+        }
+        #ai-chat-btn:hover { transform: scale(1.08); }
+        
+        #ai-chat-box { 
+            position: fixed; 
+            bottom: 95px; 
+            right: 25px; 
+            width: 360px; 
+            height: 480px; 
+            z-index: 1000; 
+            display: none; 
+            flex-direction: column; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18); 
+        }
+        .chat-messages { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            background: #f8fafc; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+        .msg-bubble { 
+            max-width: 82%; 
+            padding: 10px 14px; 
+            border-radius: 16px; 
+            font-size: 14px; 
+            line-height: 1.4;
+        }
+        .msg-user { 
+            background: #0d6efd; 
+            color: white; 
+            align-self: flex-end; 
+            border-bottom-right-radius: 4px; 
+        }
+        .msg-ai { 
+            background: white; 
+            color: #1e293b; 
+            align-self: flex-start; 
+            border-bottom-left-radius: 4px; 
+            border: 1px solid #e2e8f0; 
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar / Yuqori Menyu -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">
+            <i class="bi bi-bag-check-fill me-2"></i>Online Shop
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- Navigatsiya havolalari -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'home' %}"><i class="bi bi-house-door me-1"></i>Bosh sahifa</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'video_feed' %}"><i class="bi bi-play-btn me-1"></i>Reels</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'chat' %}"><i class="bi bi-chat-dots me-1"></i>Direct Chat</a>
+                </li>
+            </ul>
+
+            <!-- Qidiruv paneli -->
+            <form class="d-flex me-lg-3 my-2 my-lg-0" action="{% url 'home' %}" method="GET">
+                <div class="input-group input-group-sm">
+                    <input type="text" name="q" class="form-control border-secondary text-white bg-dark" placeholder="Mahsulotlarni qidirish..." value="{{ request.GET.q }}">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+
+            <!-- Profil va Savat -->
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'cart_detail' %}" class="btn btn-outline-light btn-sm position-relative px-3">
+                    <i class="bi bi-cart3 me-1"></i> Savat
+                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' user.username %}" class="btn btn-primary btn-sm px-3">
+                        <i class="bi bi-person-circle me-1"></i> {{ user.username }}
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm px-3">Kirish</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Asosiy Kontent -->
+<div class="container my-5">
+    
+    <!-- Sarlavha va Kategoriya filtri -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold text-dark m-0">Bizning Mahsulotlar</h3>
+            <p class="text-muted small m-0">Eng sifatli va ommabop mahsulotlar to'plami</p>
+        </div>
+        
+        {% if categories %}
+        <div class="d-flex gap-2 overflow-auto py-1">
+            <a href="{% url 'home' %}" class="btn btn-sm {% if not request.GET.category %}btn-dark{% else %}btn-outline-dark{% endif %} rounded-pill">Barchasi</a>
+            {% for cat in categories %}
+                <a href="{% url 'home' %}?category={{ cat.id }}" class="btn btn-sm {% if request.GET.category == cat.id|stringformat:'i' %}btn-dark{% else %}btn-outline-dark{% endif %} rounded-pill text-nowrap">
+                    {{ cat.name }}
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Mahsulotlar Tarmog'i (Grid) -->
+    <div class="row g-4">
+        {% for product in products %}
+        <button class="add-to-cart-btn" data-product-id="{{ product.id }}">Savatga qo'shish</button>
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card product-card h-100 shadow-sm position-relative">
+                
+                <!-- Mahsulot tafsilotlariga olib boruvchi bosiladigan havola -->
+                <a href="{% url 'product_detail' product.id %}" class="text-decoration-none text-dark flex-grow-1">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="https://via.placeholder.com/300x220?text=Rasm+Mavjud+Emas" class="card-img-top product-img" alt="No image">
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column pb-0">
+                        {% if product.category %}
+                            <span class="badge bg-light text-secondary border align-self-start mb-2 category-badge">
+                                {{ product.category.name }}
+                            </span>
+                        {% endif %}
+                        <h6 class="card-title fw-bold text-truncate mb-1">{{ product.name }}</h6>
+                        <p class="card-text text-muted small flex-grow-1 line-clamp-2">
+                            {{ product.description|truncatewords:8 }}
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Narx va Savatga Qo'shish Tugmasi -->
+                <div class="card-body pt-2 pb-3 mt-auto">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-extrabold text-primary fs-5">${{ product.price }}</span>
+                        </div>
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn btn-sm btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center position-relative z-2" title="Savatga qo'shish" style="width: 36px; height: 36px;">
+                            <i class="bi bi-cart-plus fs-6"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-box-seam fs-1 text-muted"></i>
+            <p class="text-muted fs-5 mt-3">Hozircha mahsulotlar topilmadi.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- AI Chatbot Floating Widget -->
+<button id="ai-chat-btn" class="btn btn-primary d-flex align-items-center justify-content-center shadow">
+    <i class="bi bi-robot fs-3"></i>
+</button>
+
+<div id="ai-chat-box" class="card shadow-lg border-0">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center p-3">
+        <h6 class="m-0 fw-bold"><i class="bi bi-robot me-2"></i>AI Maslahatchi</h6>
+        <button type="button" class="btn-close btn-close-white" id="close-chat"></button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        <div class="msg-bubble msg-ai">
+            Salom! Men sizning sun'iy intellekt yordamchingizman. Mahsulotlar, narxlar va savollaringiz bo'yicha qanday yordam bera olaman?
+        </div>
+    </div>
+    <div class="card-footer bg-white p-2 border-top">
+        <form id="ai-chat-form" class="d-flex gap-2">
+            <input type="text" id="ai-input" class="form-control form-control-sm border-0 bg-light" placeholder="Savolingizni yozing..." required autocomplete="off">
+            <button type="submit" class="btn btn-sm btn-primary px-3"><i class="bi bi-send"></i></button>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const chatBtn = document.getElementById('ai-chat-btn');
+    const chatBox = document.getElementById('ai-chat-box');
+    const closeBtn = document.getElementById('close-chat');
+    const chatForm = document.getElementById('ai-chat-form');
+    const chatInput = document.getElementById('ai-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    chatBtn.addEventListener('click', () => {
+        chatBox.style.display = chatBox.style.display === 'flex' ? 'none' : 'flex';
+    });
+    closeBtn.addEventListener('click', () => {
+        chatBox.style.display = 'none';
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        const userMsg = document.createElement('div');
+        userMsg.className = 'msg-bubble msg-user';
+        userMsg.innerText = text;
+        chatMessages.appendChild(userMsg);
+        
+        chatInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = 'msg-bubble msg-ai text-muted';
+        loadingMsg.innerText = 'Javob tayyorlanmoqda...';
+        chatMessages.appendChild(loadingMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            const response = await fetch('/ai-chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ message: text })
+            });
+
+            const data = await response.json();
+            chatMessages.removeChild(loadingMsg);
+
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'msg-bubble msg-ai';
+            aiMsg.innerText = data.bot_response || "Kechirasiz, xatolik yuz berdi.";
+            chatMessages.appendChild(aiMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        } catch (err) {
+            chatMessages.removeChild(loadingMsg);
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'msg-bubble msg-ai text-danger';
+            errorMsg.innerText = "Ulanishda xatolik yuz berdi.";
+            chatMessages.appendChild(errorMsg);
+        }
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.add-to-cart-btn').on('click', function(e){
+        e.preventDefault();
+        let productId = $(this).data('product-id');
+        
+        $.ajax({
+            url: '/cart/add/' + productId + '/',
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response){
+                alert("Mahsulot savatga qo'shildi!");
+            },
+            error: function(xhr, status, error){
+                console.error("Xatolik:", error);
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

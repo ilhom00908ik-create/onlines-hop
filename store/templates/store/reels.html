@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reels - Mahsulotlar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .reels-container {
+            max-width: 450px;
+            margin: 0 auto;
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100vh;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .reels-container::-webkit-scrollbar {
+            display: none;
+        }
+        .reel-card {
+            scroll-snap-align: start;
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        /* Videoni to'liq ramkaga (9:16) sig'dirish va cho'zilmasligini ta'minlash */
+        .video-wrapper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Videoni ekranga to'liq va bir xil shaklda joylashtiradi */
+        }
+        /* Pastki va yon boshqaruv elementlari ustidagi qora soya (O'qishga qulaylik uchun) */
+        .reel-overlay-gradient {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .reel-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 15px;
+            right: 75px;
+            z-index: 10;
+        }
+        .reel-actions {
+            position: absolute;
+            bottom: 40px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            z-index: 10;
+        }
+        .action-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: scale(1.1);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .action-text {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            text-align: center;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="reels-container">
+    {% for post in reels %}
+    <div class="reel-card">
+        <div class="video-wrapper">
+            <!-- Video tekshiruvi: Reel obyektida yoki Product ichida bo'lsa ko'rsatamiz -->
+            {% if post.video %}
+                <video loop playsinline onclick="this.paused ? this.play() : this.pause()">
+                    <source src="{{ post.video.url }}" type="video/mp4">
+                </video>
+            {% elif post.product and post.product.video %}
+                <video loop playsinline onclick="this.paused ? this.play() : this.pause()">
+                    <source src="{{ post.product.video.url }}" type="video/mp4">
+                </video>
+            {% endif %}
+
+            <div class="reel-overlay-gradient"></div>
+
+            <!-- Video ustidagi ma'lumotlar -->
+            <div class="reel-overlay">
+                {% if post.caption %}
+                    <p class="mb-2 fw-semibold" style="font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">
+                        {{ post.caption }}
+                    </p>
+                {% endif %}
+                
+                {% if post.product %}
+                    <div class="d-flex flex-column gap-1 align-items-start">
+                        <span class="badge bg-primary px-2 py-1 mb-1">{{ post.product.name }}</span>
+                        <a href="{% url 'product_detail' post.product.id %}" class="btn btn-success btn-sm fw-bold rounded-pill px-3 shadow">
+                            🛒 Buyurtma berish ({{ post.product.price }} so'm)
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Yon tarafdagi menyu tugmalari -->
+            <div class="reel-actions">
+                <div class="text-center">
+                    <a href="{% url 'home' %}" class="action-btn">
+                        <i class="bi bi-house-door-fill"></i>
+                    </a>
+                    <div class="action-text">Bosh sahifa</div>
+                </div>
+
+                {% if post.product %}
+                <div class="text-center">
+                    <a href="{% url 'product_detail' post.product.id %}" class="action-btn">
+                        <i class="bi bi-eye-fill"></i>
+                    </a>
+                    <div class="action-text">Ko'rish</div>
+                </div>
+                {% endif %}
+
+                <div class="text-center">
+                    <a href="{% url 'cart_detail' %}" class="action-btn">
+                        <i class="bi bi-bag-check-fill"></i>
+                    </a>
+                    <div class="action-text">Savat</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+        <div class="d-flex align-items-center justify-content-center h-100">
+            <p class="text-muted">Hozircha hech qanday reels yoki video mavjud emas.</p>
+        </div>
+    {% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Scroll qilinganda video avtomatik ijro etilishi uchun IntersectionObserver
+    const videos = document.querySelectorAll('video');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.play().catch(() => {});
+            } else {
+                entry.target.pause();
+            }
+        });
+    }, { threshold: 0.6 });
+
+    videos.forEach(video => observer.observe(video));
+</script>
+</body>
+</html>

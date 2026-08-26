@@ -1,0 +1,108 @@
+{% extends 'store/base.html' %}
+
+{% block title %}To'lov qilish — Online Shop{% endblock %}
+
+{% block head %}
+<style>
+    .pay-card {
+        max-width: 520px;
+        margin: 40px auto;
+        background: var(--card, #fff);
+        border: 1px solid var(--line, #e2e8f0);
+        border-radius: 24px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+    }
+    .pay-methods {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin: 20px 0;
+    }
+    .pay-btn {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        text-decoration: none;
+        color: #334155;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+    .pay-btn.active {
+        border-color: #2563eb;
+        background-color: #eff6ff;
+        color: #2563eb;
+    }
+    .qr-box {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 18px;
+        padding: 20px;
+        margin: 24px 0;
+        display: inline-block;
+    }
+    .qr-box img {
+        width: 200px;
+        height: 200px;
+        display: block;
+        margin: 0 auto;
+    }
+    .submit-btn {
+        width: 100%;
+        background-color: #16a34a;
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 16px;
+        font-weight: 800;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .submit-btn:hover {
+        background-color: #15803d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pay-card">
+    <h2>💳 To'lovni amalga oshirish</h2>
+    <p style="color: #64748b;">Buyurtma №{{ order.id }} — <strong>{{ order.total_price }} so'm</strong></p>
+
+    <!-- To'lov tizimini tanlash -->
+    <div class="pay-methods">
+        <a href="?payment_method=click" class="pay-btn {% if payment_method == 'click' %}active{% endif %}">
+            🔹 Click
+        </a>
+        <a href="?payment_method=payme" class="pay-btn {% if payment_method == 'payme' %}active{% endif %}">
+            🔹 Payme
+        </a>
+    </div>
+
+    <!-- Dinamik QR-Kod -->
+    <div class="qr-box">
+        <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="{{ payment_method }} QR Code">
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 10px;">
+            {{ payment_method|upper }} ilovangiz orqali QR-kodni skanerlang
+        </p>
+    </div>
+
+    <!-- Ilova orqali to'g'ridan-to'g'ri o'tish havolasi -->
+    <div style="margin-bottom: 24px;">
+        <a href="{{ pay_url }}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 700;">
+            Ilova orqali to'lash →
+        </a>
+    </div>
+
+    <!-- To'lovni tasdiqlash va Bosh sahifaga qaytish -->
+    <form action="{% url 'confirm_payment_complete' order.id %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="submit-btn">
+            ✅ To'lov qildim (Bosh sahifaga qaytish)
+        </button>
+    </form>
+</div>
+{% endblock %}

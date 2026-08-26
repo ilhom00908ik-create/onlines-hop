@@ -1,0 +1,200 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+<style>
+    .payment-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .payment-card:hover {
+        border-color: #2563eb;
+        background-color: #f8fafc;
+    }
+    
+    .payment-option .select-icon {
+        display: none;
+    }
+
+    .payment-option input[type="radio"]:checked + .payment-card {
+        border-color: #1d4ed8;
+        background-color: #eff6ff;
+        box-shadow: 0 4px 12px rgba(29, 78, 216, 0.15);
+    }
+
+    .payment-option input[type="radio"]:checked + .payment-card .select-icon {
+        display: inline-block;
+    }
+
+    .checkout-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f1f5f9;
+    }
+</style>
+
+<div class="container my-4" style="max-width: 850px;">
+    <div class="checkout-card p-4 p-md-5">
+        <h2 class="fw-bold text-dark mb-4 text-center">📦 Buyurtmani rasmiylashtirish</h2>
+
+        <form id="checkoutForm" method="post" action="{% url 'checkout' %}">
+            {% csrf_token %}
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Ismingiz</label>
+                    <input type="text" name="first_name" class="form-control form-control-lg rounded-3" placeholder="Masalan: Ali" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Familiyangiz</label>
+                    <input type="text" name="last_name" class="form-control form-control-lg rounded-3" placeholder="Masalan: Valiyev" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Telefon raqam</label>
+                    <input type="tel" name="phone" class="form-control form-control-lg rounded-3" placeholder="+998 90 123 45 67" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Yetkazib berish manzili</label>
+                    <input type="text" name="address" class="form-control form-control-lg rounded-3" placeholder="Shahar, ko'cha, uy raqami" required>
+                </div>
+            </div>
+
+            <h5 class="fw-bold text-dark mb-3">To'lov usulini tanlang</h5>
+            
+            <div class="d-flex flex-column gap-3 mb-4">
+                <!-- Click -->
+                <label class="payment-option m-0">
+                    <input type="radio" name="payment_method" value="click" class="d-none" checked>
+                    <div class="payment-card">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fs-3">💳</span>
+                            <div>
+                                <h6 class="fw-bold m-0">Click via QR / App</h6>
+                                <small class="text-muted">Click ilovasi orqali to'lov</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-check-circle-fill text-primary fs-4 select-icon"></i>
+                    </div>
+                </label>
+
+                <!-- Payme -->
+                <label class="payment-option m-0">
+                    <input type="radio" name="payment_method" value="payme" class="d-none">
+                    <div class="payment-card">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fs-3">🔹</span>
+                            <div>
+                                <h6 class="fw-bold m-0">Payme</h6>
+                                <small class="text-muted">Payme ilovasi orqali to'lov</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-check-circle-fill text-primary fs-4 select-icon"></i>
+                    </div>
+                </label>
+
+                <!-- Naqd -->
+                <label class="payment-option m-0">
+                    <input type="radio" name="payment_method" value="cash" class="d-none">
+                    <div class="payment-card">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fs-3">💵</span>
+                            <div>
+                                <h6 class="fw-bold m-0">Naqd pul orqali</h6>
+                                <small class="text-muted">Mahsulotni qo'lingizga olganda to'lang</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-check-circle-fill text-primary fs-4 select-icon"></i>
+                    </div>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-4 fw-bold py-3 shadow">
+                Buyurtmani tasdiqlash 🚀
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- QR KOD MODAL OYNA -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 p-4 text-center">
+            <h4 class="fw-bold mb-3">To'lovni amalga oshiring</h4>
+            <div class="my-3">
+                <img id="qrImage" src="" alt="QR Code" class="img-fluid rounded-3 shadow-sm" style="max-width: 220px;">
+            </div>
+            <p class="text-muted small mb-4">Ilova orqali QR kodni skanerlang va to'lovni tasdiqlagach quyidagi tugmani bosing.</p>
+            <button type="button" id="confirmPaymentBtn" class="btn btn-primary btn-lg rounded-3 fw-bold w-100 py-2">
+                Tasdiqlash va Bosh sahifaga qaytish 🚀
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkoutForm');
+    const qrModalElement = document.getElementById('qrModal');
+    const qrModal = new bootstrap.Modal(qrModalElement);
+    const confirmBtn = document.getElementById('confirmPaymentBtn');
+
+    form.addEventListener('submit', function(e) {
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        // Agar Naqd pul tanlangan bo'lsa, standard HTML submit ishlaydi
+        if (selectedMethod === 'cash') {
+            return true; 
+        }
+
+        // Click yoki Payme tanlansa Ajax orqali yuboramiz
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.qr_code_url || data.success) {
+                // QR Kod rasmini o'rnatamiz (backend URL qaytarsa)
+                if (data.qr_code_url) {
+                    document.getElementById('qrImage').src = data.qr_code_url;
+                }
+                qrModal.show();
+            } else {
+                // Oddiy submit ga redirect qilish
+                window.location.href = "{% url 'home' %}";
+            }
+        })
+        .catch(() => {
+            // Har qanday xatolikda ham formani standart yuborish
+            form.submit();
+        });
+    });
+
+    // MODAL YOPILISHINI VA REDIRECT NIMA QILISHINI BOSHQARISH
+    confirmBtn.addEventListener('click', function() {
+        // 1. Modalni yopamiz
+        qrModal.hide();
+
+        // 2. Fon qorong'uligini (backdrop) majburan tozalaymiz
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+
+        // 3. Bosh sahifaga to'liq yo'naltiramiz
+        window.location.href = "{% url 'home' %}";
+    });
+});
+</script>
+{% endblock %}

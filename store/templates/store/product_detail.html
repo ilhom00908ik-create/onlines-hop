@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Online Shop</title>
+    
+    <!-- Swiper CSS (Slider uchun) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --primary-2: #2563eb;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Topbar Menyu */
+        .topbar {
+            position: sticky; top: 0; z-index: 20;
+            background: rgba(15, 23, 42, 0.96);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+        }
+        .topbar-inner {
+            max-width: 1200px; margin: 0 auto; padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+        }
+        .brand { color: #fff; font-weight: 800; font-size: 1.35rem; }
+        .nav { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .nav a { color: rgba(255,255,255,0.9); padding: 8px 12px; border-radius: 999px; font-size: 0.95rem; }
+        .nav a:hover { background: rgba(255,255,255,0.08); }
+
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 18px 48px; }
+        
+        .detail-card { background: var(--card); border-radius: 20px; border: 1px solid var(--line); padding: 28px; display: flex; gap: 28px; flex-wrap: wrap; box-shadow: var(--shadow); }
+        
+        /* Slider Uslublari */
+        .slider-box { flex: 1; min-width: 280px; max-width: 500px; }
+        .swiper { width: 100%; height: 380px; border-radius: 16px; background: #f1f5f9; }
+        .swiper-slide { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .swiper-slide img, .swiper-slide video { width: 100%; height: 100%; object-fit: cover; }
+        .swiper-button-next, .swiper-button-prev { color: var(--primary); }
+
+        .info-box { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 16px; }
+        .price { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        
+        /* Sotuvchi Bloki */
+        .seller-badge {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f8fafc; border: 1px solid var(--line); padding: 12px 16px; border-radius: 12px;
+        }
+        .seller-info { display: flex; flex-direction: column; }
+        .seller-name { font-weight: bold; font-size: 0.95rem; }
+        .btn-chat { background: #e0e7ff; color: var(--primary); padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-weight: bold; font-size: 0.9rem; }
+        .form-group select, .form-group input { padding: 10px; border-radius: 10px; border: 1px solid var(--line); font-size: 1rem; outline: none; }
+        .btn-add { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 10px; }
+
+        /* Texnik Xususiyatlar */
+        .specs-box { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-top: 24px; }
+        .specs-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 12px; }
+        .specs-content { color: var(--muted); line-height: 1.6; white-space: pre-line; }
+
+        /* Pastki bloklar va Grid */
+        .section-title { font-size: 1.3rem; margin: 40px 0 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .mini-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .mini-card:hover { transform: translateY(-4px); box-shadow: 0 22px 40px rgba(15, 23, 42, 0.12); }
+        .mini-thumb { height: 140px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .mini-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .mini-title { font-weight: bold; font-size: 0.95rem; margin: 10px 0 4px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mini-price { color: var(--primary); font-weight: bold; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Doimiy Menyu Bar -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">🛍️ Online Shop</div>
+            <nav class="nav">
+                <a href="{% url 'home' %}">Bosh sahifa</a>
+                <a href="{% url 'video_feed' %}">Reels</a>
+                <a href="{% url 'cart_detail' %}">Savatcha</a>
+                <a href="{% url 'chat' %}">Chat</a>
+                {% if request.user.is_authenticated %}
+                    {% if request.user.profile and request.user.profile.role == 'seller' %}
+                        <a href="{% url 'seller_dashboard' %}">Sotuvchi paneli</a>
+                    {% endif %}
+                    <a href="{% url 'profile' request.user.username %}">Profil</a>
+                    <a href="{% url 'logout' %}">Chiqish</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Kirish</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="detail-card">
+            
+            <!-- Karusel Slider Bloki -->
+            <div class="slider-box">
+                <div class="swiper mySwiper">
+                    <div class="swiper-wrapper">
+                        <!-- Asosiy rasm -->
+                        {% if product.image %}
+                            <div class="swiper-slide"><img src="{{ product.image.url }}" alt="{{ product.name }}"></div>
+                        {% endif %}
+                        
+                        <!-- Video (agar yuklangan bo'lsa) -->
+                        {% if product.video %}
+                            <div class="swiper-slide">
+                                <video controls preload="metadata">
+                                    <source src="{{ product.video.url }}" type="video/mp4">
+                                </video>
+                            </div>
+                        {% endif %}
+
+                        <!-- Qo'shimcha rasmlar -->
+                        {% for img in product.images.all %}
+                            <div class="swiper-slide"><img src="{{ img.image.url }}" alt="{{ product.name }}"></div>
+                        {% endfor %}
+
+                        {% if not product.image and not product.images.exists and not product.video %}
+                            <div class="swiper-slide"><span style="font-size:3rem;">🛍️</span></div>
+                        {% endif %}
+                    </div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h1 style="margin:0; font-size: 1.8rem;">{{ product.name }}</h1>
+                <div class="price">{{ product.price }} so'm</div>
+
+                <!-- Sotuvchi Profili Info -->
+                {% if product.seller %}
+                <div class="seller-badge">
+                    <div class="seller-info">
+                        <span style="font-size: 0.75rem; color: var(--muted);">Sotuvchi:</span>
+                        <a href="{% url 'seller_profile' product.seller.id %}" class="seller-name">🏪 {{ product.seller.store_name }}</a>
+                    </div>
+                    <a href="{% url 'chat' %}?user_id={{ product.seller.user.id }}" class="btn-chat">💬 Yozish</a>
+                </div>
+                {% endif %}
+
+                <p style="color: var(--muted); line-height: 1.5; margin: 0;">{{ product.description }}</p>
+
+                <!-- Savatga yuborish formasi -->
+                <form action="{% url 'add_to_cart' product.id %}" method="POST">
+                    {% csrf_token %}
+                    
+                    {% if product.colors.all %}
+                    <div class="form-group">
+                        <label for="color">Rangini tanlang:</label>
+                        <select name="color" id="color" required>
+                            {% for color in product.colors.all %}
+                                <option value="{{ color.name }}">{{ color.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    {% if product.sizes.all %}
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label for="size">O'lchamini tanlang:</label>
+                        <select name="size" id="size" required>
+                            {% for size in product.sizes.all %}
+                                <option value="{{ size.name }}">{{ size.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label for="quantity">Soni:</label>
+                        <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.stock }}" required>
+                    </div>
+
+                    {% if product.stock > 0 %}
+                        <button type="submit" class="btn-add">🛒 Savatga qo'shish</button>
+                    {% else %}
+                        <button type="button" class="btn-add" disabled style="background: #ccc; cursor: not-allowed;">Tugagan</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <!-- Texnik xususiyatlar va Tarkib -->
+        {% if product.specifications %}
+        <div class="specs-box">
+            <div class="specs-title">📋 Texnik xususiyatlar va tarkib</div>
+            <div class="specs-content">{{ product.specifications }}</div>
+        </div>
+        {% endif %}
+
+        <!-- 1. O'xshash Mahsulotlar Bloki (Kategoriya bo'yicha) -->
+        {% if related_products %}
+            <div class="section-title">📦 O'xshash mahsulotlar</div>
+            <div class="grid">
+                {% for item in related_products %}
+                    <a href="{% url 'product_detail' item.id %}" class="mini-card">
+                        <div class="mini-thumb">
+                            {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}🛍️{% endif %}
+                        </div>
+                        <div class="mini-title">{{ item.name }}</div>
+                        <div class="mini-price">{{ item.price }} so'm</div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- 2. Ommabop Mahsulotlar Bloki -->
+        {% if popular_products %}
+            <div class="section-title">🔥 Ommabop mahsulotlar</div>
+            <div class="grid">
+                {% for item in popular_products %}
+                    <a href="{% url 'product_detail' item.id %}" class="mini-card">
+                        <div class="mini-thumb">
+                            {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}🛍️{% endif %}
+                        </div>
+                        <div class="mini-title">{{ item.name }}</div>
+                        <div class="mini-price">{{ item.price }} so'm</div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- 3. Siz Ko'rgan Mahsulotlar Bloki -->
+        {% if viewed_products %}
+            <div class="section-title">👁️ Oxirgi ko'rgan mahsulotlaringiz</div>
+            <div class="grid">
+                {% for item in viewed_products %}
+                    <a href="{% url 'product_detail' item.id %}" class="mini-card">
+                        <div class="mini-thumb">
+                            {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}🛍️{% endif %}
+                        </div>
+                        <div class="mini-title">{{ item.name }}</div>
+                        <div class="mini-price">{{ item.price }} so'm</div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        var swiper = new Swiper(".mySwiper", {
+            loop: true,
+            pagination: { el: ".swiper-pagination", clickable: true },
+            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sotuvchi kabineti</title>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #09008d;
+            --shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; font-family: Arial, sans-serif; background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 180px, #f8fafc 100%);
+            color: var(--text);
+        }
+        .wrap { max-width: 1200px; margin: 42px auto; padding: 0 18px; }
+        .head {
+            display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        h1 { margin: 0; font-size: clamp(2rem, 3vw, 2.8rem); }
+        .btn {
+            display: inline-block; padding: 12px 18px; border-radius: 12px; font-weight: 700; text-decoration: none;
+        }
+        .btn-outline { border: 1px solid var(--line); color: var(--text); background: #fff; }
+        .panel {
+            background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); overflow: hidden;
+        }
+        .panel-body { padding: 26px; }
+        .hero {
+            background: linear-gradient(135deg, #0f172a, #1d4ed8 60%, #60a5fa 100%); color: #fff;
+            border-radius: 24px; padding: 24px 26px; margin-bottom: 24px; box-shadow: var(--shadow);
+        }
+        .hero h2 { margin: 0 0 6px; font-size: clamp(1.5rem, 2vw, 2rem); }
+        .hero p { margin: 0; color: rgba(255,255,255,0.8); }
+        .stats {
+            display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px;
+        }
+        .stat {
+            padding: 16px 18px; border-radius: 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+        }
+        .stat strong { display: block; font-size: 1.8rem; margin-bottom: 4px; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+        .field { display: grid; gap: 8px; }
+        label { font-weight: 700; }
+        input, textarea, select {
+            width: 100%; border: 1px solid var(--line); background: #f8fafc; border-radius: 12px; padding: 12px 14px; font-size: 1rem; outline: none;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,0.12); }
+        textarea { min-height: 120px; resize: vertical; }
+        .submit { margin-top: 8px; display: inline-block; background: linear-gradient(135deg, var(--primary), #2563eb); color: #fff; border: none; border-radius: 12px; padding: 13px 18px; font-weight: 800; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+        th, td { text-align: left; padding: 14px 12px; border-bottom: 1px solid var(--line); }
+        th { background: #f8fafc; }
+        .badge {
+            display: inline-block; padding: 6px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
+        }
+        .approved { background: rgba(22,163,74,0.12); color: var(--success); }
+        .pending { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .rejected { background: rgba(220,38,38,0.12); color: var(--danger); }
+        .img {
+            width: 56px; height: 56px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line);
+        }
+        @media (max-width: 760px){ .form-grid, .stats { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="head">
+            <h1>📦 Sotuvchi kabineti</h1>
+            <a class="btn btn-outline" href="{% url 'home' %}">Do'konga qaytish</a>
+        </div>
+
+        <div class="hero">
+            <h2>Omboringizni boshqarish</h2>
+            <p>Yangi mahsulot qo'shing, ombor holatini kuzatib boring va takliflaringizni boshqaring.</p>
+            <div class="stats">
+                <div class="stat"><strong>{{ products.count }}</strong><span>Umumiy mahsulot</span></div>
+                <div class="stat"><strong>{{ pending_products.count }}</strong><span>Kutilmoqda</span></div>
+                <div class="stat"><strong>{{ approved_products.count }}</strong><span>Tasdiqlangan</span></div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 24px;">
+            <div class="panel-body">
+                <h2 style="margin:0 0 18px;">Yangi mahsulot qo'shish</h2>
+
+                {% if success_message %}
+                    <div style="margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: rgba(22,163,74,0.12); color: var(--success); font-weight: 700; border: 1px solid rgba(22,163,74,0.3);">
+                        ✅ {{ success_message }}
+                    </div>
+                {% endif %}
+
+                {% if errors %}
+                    <div style="margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: rgba(220,38,38,0.08); color: var(--danger); border: 1px solid rgba(220,38,38,0.3);">
+                        {% for error in errors %}
+                            <div>⚠️ {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="name">Mahsulot nomi</label>
+                            <input type="text" id="name" name="name" placeholder="Masalan: iPhone 15" required>
+                        </div>
+                        <div class="field">
+                            <label for="price">Narxi (so'm)</label>
+                            <input type="number" id="price" name="price" step="0.01" placeholder="2500000" required>
+                        </div>
+                        <div class="field">
+                            <label for="stock">Ombordagi soni</label>
+                            <input type="number" id="stock" name="stock" placeholder="25" required>
+                        </div>
+                        <div class="field">
+                            <label for="image">Rasm</label>
+                            <input type="file" id="image" name="image" required>
+                        </div>
+                        <div class="field" style="grid-column:1 / -1;">
+                            <label for="description">Tavsifi</label>
+                            <textarea id="description" name="description" placeholder="Mahsulot haqida batafsil..." required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit">Mahsulotni omborga qo'shish</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h2 style="margin:0 0 12px;">Mening mahsulotlarim</h2>
+                {% if products %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rasm</th>
+                            <th>Nomi</th>
+                            <th>Narx</th>
+                            <th>Soni</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                {% if product.image %}
+                                    <img class="img" src="{{ product.image.url }}" alt="{{ product.name }}">
+                                {% else %}
+                                    🛍️
+                                {% endif %}
+                            </td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.price }} so'm</td>
+                            <td>{{ product.stock }} dona</td>
+                            <td>
+                                {% if product.status == 'approved' %}
+                                    <span class="badge approved">Tasdiqlangan</span>
+                                {% elif product.status == 'pending' %}
+                                    <span class="badge pending">Kutilmoqda</span>
+                                {% else %}
+                                    <span class="badge rejected">Rad etilgan</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    <div style="padding: 24px; border-radius: 16px; border: 1px dashed var(--line); background: #f8fafc; color: var(--muted); text-align: center;">Hali mahsulot qo'shmadingiz.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

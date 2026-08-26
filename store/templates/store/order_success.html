@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyurtma qabul qilindi</title>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; display: grid; place-items: center;
+            font-family: Arial, sans-serif; background: linear-gradient(180deg, #effcf5 0%, var(--bg) 100%);
+            color: var(--text);
+        }
+        .card {
+            width: min(100%, 560px); background: var(--card); border: 1px solid var(--line);
+            border-radius: 28px; box-shadow: var(--shadow); padding: 36px 28px; text-align: center;
+        }
+        .icon { font-size: 5rem; margin-bottom: 10px; }
+        h1 { margin: 0 0 12px; font-size: clamp(2rem, 3vw, 2.6rem); }
+        p { margin: 0 0 20px; color: var(--muted); line-height: 1.7; }
+        .meta {
+            background: #f8fafc; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 20px;
+            text-align: left;
+        }
+        .meta div { margin-bottom: 8px; }
+        .meta div:last-child { margin-bottom: 0; }
+        .btn {
+            display: inline-block; padding: 12px 18px; border-radius: 12px; text-decoration: none; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), #2563eb); color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✅</div>
+        <h1>Buyurtmangiz qabul qilindi</h1>
+        <p>Rahmat! Buyurtmangiz va to'lovingiz muvaffaqiyatli qabul qilindi.</p>
+
+        <div class="meta">
+            <div><strong>Buyurtma raqami:</strong> #{{ order.id }}</div>
+            {% if order.transaction_id %}
+            <div><strong>Tranzaksiya ID:</strong> <code>{{ order.transaction_id }}</code></div>
+            {% endif %}
+            <div><strong>Jami summa:</strong> {{ order.total_amount }} so'm</div>
+        </div>
+
+        <a href="{% url 'home' %}" class="btn">Bosh sahifaga qaytish</a>
+    </div>
+</body>
+</html>

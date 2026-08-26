@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reels & Video Feed</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --card: #121a2b;
+            --line: rgba(148, 163, 184, 0.18);
+            --primary: #3b82f6;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --success: #22c55e;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+        .feed {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        .reel {
+            position: relative;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            height: 82vh;
+            min-height: 580px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .video-box {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* O'NG TARAFDAGI TUGMALAR (Like, Comment) */
+        .side-bar {
+            position: absolute;
+            right: 12px;
+            bottom: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            z-index: 10;
+        }
+        .action-btn {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+        .action-btn:active { transform: scale(0.9); }
+        .action-count { font-size: 0.7rem; color: #fff; margin-top: 2px; font-weight: bold; }
+
+        /* OVERLAY - PASTDAGI MA'LUMOTLAR */
+        .overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 20px 14px 14px;
+            background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 5;
+        }
+        .user-title { font-weight: bold; font-size: 1rem; color: #fff; }
+        .caption { font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; }
+
+        /* FOYDALANUVCHINING OXIRGI IZOHI (Faqat bitta ko'rinadi) */
+        .user-last-comment {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            border-left: 3px solid var(--primary);
+            color: #f1f5f9;
+            margin-top: 4px;
+        }
+
+        /* PASTDAGI SAVATGA QO'SHISH PANELI (REELS MAHSULOTI UCHUN) */
+        .product-card-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(18, 26, 43, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--line);
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin-top: 4px;
+        }
+        .prod-info .p-name { font-weight: bold; font-size: 0.9rem; display: block; color: #fff; }
+        .prod-info .p-price { color: var(--success); font-weight: bold; font-size: 0.85rem; }
+        .btn-cart {
+            background: var(--success);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+        }
+
+        /* O'NG TOMONDAN CHIQADIGAN IZOHLAR PANELI (DRAWER) */
+        .comments-drawer {
+            position: fixed;
+            top: 0; right: -100%;
+            width: 100%; max-width: 400px; height: 100%;
+            background: var(--card);
+            z-index: 1000;
+            transition: right 0.3s ease-in-out;
+            box-shadow: -5px 0 25px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+        .comments-drawer.open { right: 0; }
+        .drawer-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--line);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .drawer-header h3 { margin: 0; font-size: 1.1rem; }
+        .close-btn { background: none; border: none; color: var(--muted); font-size: 1.8rem; cursor: pointer; }
+        
+        .drawer-body {
+            flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+        }
+        .comment-item {
+            background: rgba(255,255,255,0.03);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+        .comment-item strong { color: var(--primary); display: block; margin-bottom: 2px; }
+
+        .drawer-footer {
+            padding: 14px; border-top: 1px solid var(--line); background: var(--bg);
+        }
+        .drawer-footer form { display: flex; gap: 8px; }
+        .drawer-footer input {
+            flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--line);
+            border-radius: 10px; padding: 10px 12px; color: #fff; outline: none; font-size: 0.9rem;
+        }
+        .drawer-footer button {
+            background: var(--primary); color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-weight: bold; cursor: pointer;
+        }
+        .drawer-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 999; display: none;
+        }
+        .drawer-backdrop.show { display: block; }
+    </style>
+</head>
+<body>
+
+    <main class="feed">
+        {% if videos %}
+            {% for item in videos %}
+                <article class="reel">
+                    <div class="video-box">
+                        <video loop muted playsinline controls>
+                            {% if item.video %}
+                                <source src="{{ item.video.url }}" type="video/mp4">
+                            {% endif %}
+                        </video>
+
+                        <!-- O'ng tarafdagi harakatlar -->
+                        <div class="side-bar">
+                            <form method="POST" action="{% url 'like_reel' item.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn">
+                                    {% if item.id in liked_ids %}❤️{% else %}🤍{% endif %}
+                                    <span class="action-count">{{ item.likes.count|default:0 }}</span>
+                                </button>
+                            </form>
+                            
+                            <!-- Izoh tugmasi (Bosilganda panel ochiladi) -->
+                            <button class="action-btn open-comments" data-reel-id="{{ item.id }}">
+                                💬
+                                <span class="action-count">{{ item.comments.count|default:0 }}</span>
+                            </button>
+                        </div>
+
+                        <!-- Video ustidagi ma'lumotlar -->
+                        <div class="overlay">
+                            <div class="user-title">@{{ item.user.username }}</div>
+                            {% if item.title %}<div class="caption">{{ item.title }}</div>{% endif %}
+
+                            <!-- Ekran ustida FAQAT shu foydalanuvchining o'zi yozgan OXIRGI izohi ko'rinadi -->
+                            {% for comment in item.comments.all %}
+                                {% if comment.user == request.user and forloop.last %}
+                                    <div class="user-last-comment">
+                                        <strong>Siz:</strong> {{ comment.text }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+
+                            <!-- REELS MAHSULOTI VA NARXI (To'g'ridan-to'g'ri Reels parametridan olinadi) -->
+                            <div class="product-card-bar">
+                                <div class="prod-info">
+                                    <span class="p-name">{{ item.title }}</span>
+                                    <span class="p-price">{{ item.price }} so'm</span>
+                                </div>
+                                <a href="{% url 'add_to_cart' item.id %}" class="btn-cart add-to-cart-btn" data-reel-id="{{ item.id }}">
+                                    🛒 Savatga
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Har bir video uchun izohlar ro'yxati (yashirin HTML formatida) -->
+                    <div id="comments-data-{{ item.id }}" style="display:none;">
+                        {% for comment in item.comments.all %}
+                            <div class="comment-item">
+                                <strong>@{{ comment.user.username }}</strong>
+                                <span>{{ comment.text }}</span>
+                            </div>
+                        {% empty %}
+                            <p style="text-align:center; color: var(--muted);">Hozircha izohlar yo'q. Birinchi bo'lib yozing!</p>
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endfor %}
+        {% else %}
+            <p style="text-align:center; padding: 40px 0;">Videolar topilmadi.</p>
+        {% endif %}
+    </main>
+
+    <!-- O'NG TOMONDAN CHIQADIGAN PANALLAR -->
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="comments-drawer" id="commentsDrawer">
+        <div class="drawer-header">
+            <h3>Izohlar</h3>
+            <button class="close-btn" id="closeDrawer">&times;</button>
+        </div>
+        <div class="drawer-body" id="drawerBody">
+            <!-- Izohlar shu yerga tushadi -->
+        </div>
+        <div class="drawer-footer">
+            {% if request.user.is_authenticated %}
+                <form id="drawerCommentForm" method="POST" action="">
+                    {% csrf_token %}
+                    <input type="text" name="text" placeholder="Izoh yozing..." required maxlength="500">
+                    <button type="submit">Yuborish</button>
+                </form>
+            {% else %}
+                <p style="text-align: center; font-size:0.85rem; color: var(--muted);">Izoh qoldirish uchun tizimga kiring.</p>
+            {% endif %}
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function(){
+    // Izohlar panelini ochish va to'g'ri URL biriktirish
+    $('.open-comments').on('click', function(){
+        let reelId = $(this).data('reel-id');
+        let commentsContent = $('#comments-data-' + reelId).html();
+        
+        $('#drawerBody').html(commentsContent);
+        // To'g'rilangan RESTful URL pattern
+        $('#drawerCommentForm').attr('action', '/reels/' + reelId + '/comment/');
+        
+        $('#commentsDrawer').addClass('open');
+        $('#drawerBackdrop').addClass('show');
+    });
+
+    // Panelni yopish
+    $('#closeDrawer, #drawerBackdrop').on('click', function(){
+        $('#commentsDrawer').removeClass('open');
+        $('#drawerBackdrop').removeClass('show');
+    });
+
+    // Avtomatik videolarni o'ynatish
+    const videos = document.querySelectorAll('video');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) { entry.target.play().catch(()=>{}); } 
+            else { entry.target.pause(); }
+        });
+    }, { threshold: 0.6 });
+    videos.forEach(v => observer.observe(v));
+
+    // AJAX Savatga qo'shish (Reels-Mahsulot uchun)
+    $('.add-to-cart-btn').on('click', function(e){
+        e.preventDefault();
+        let url = $(this).attr('href');
+        
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: { 'csrfmiddlewaretoken': '{{ csrf_token }}' },
+            success: function(response){
+                alert("Mahsulot savatga muvaffaqiyatli qo'shildi!");
+            },
+            error: function(){
+                window.location.href = url;
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyurtma #{{ order.id }} To'lov qilish</title>
+    <style>
+        :root {
+            --primary: #1d4ed8;
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --border: #e2e8f0;
+        }
+        body { font-family: Arial, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .payment-card { background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; max-width: 480px; width: 100%; }
+        .price { font-size: 2rem; font-weight: bold; color: var(--primary); margin: 10px 0 20px; }
+        
+        /* UzQR Bloki */
+        .uzqr-box { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 20px; margin-bottom: 24px; }
+        .uzqr-box img { width: 160px; height: 160px; border-radius: 12px; }
+        
+        .btn-universal { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        
+        /* Grid qism */
+        .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .pay-box { border: 1px solid var(--border); border-radius: 14px; padding: 15px; background: #fff; }
+        .pay-box img { width: 100%; max-width: 110px; border-radius: 8px; margin: 8px 0; }
+        .btn-pay { display: block; padding: 10px; border-radius: 8px; font-weight: bold; text-decoration: none; color: #fff; font-size: 0.85rem; }
+        .btn-click { background: #0088cc; }
+        .btn-payme { background: #19c3af; }
+
+        /* Modal (Mobil Ilovalar Ro'yxati) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #fff; padding: 24px; border-radius: 20px; max-width: 380px; width: 90%; text-align: left; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .close-btn { font-size: 1.5rem; cursor: pointer; border: none; background: none; }
+        .app-list { display: flex; flex-direction: column; gap: 10px; }
+        .app-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; text-decoration: none; color: #0f172a; font-weight: bold; }
+        .app-item:hover { background: #f8fafc; }
+    </style>
+</head>
+<body>
+
+<div class="payment-card">
+    <h2 style="margin: 0;">To'lov sahifasi</h2>
+    <p style="color: #64748b; margin: 6px 0 0;">Buyurtma raqami: <b>#{{ order.id }}</b></p>
+    <div class="price">{{ order.total_price }} so'm</div>
+
+    <!-- 1. Universal UzQR Bloki -->
+    <div class="uzqr-box">
+        <h3 style="margin: 0 0 10px; font-size: 1.1rem; color: #0f172a;">📱 UzQR (Har qanday to'lov ilovasi)</h3>
+        <img src="data:image/png;base64,{{ uzqr_qr }}" alt="UzQR Kod">
+        <p style="font-size: 0.8rem; color: #64748b; margin: 8px 0 0;">Har qanday bank yoki to'lov ilovasidan skanerlang</p>
+        <button class="btn-universal" onclick="openModal()">📲 Mobil ilovani tanlash</button>
+    </div>
+
+    <!-- 2. Alohida To'lov Usullari -->
+    <div style="font-weight: bold; text-align: left; font-size: 0.9rem; color: #64748b;">To'g'ridan-to'g'ri o'tish:</div>
+    <div class="payment-grid">
+        <div class="pay-box">
+            <h4 style="margin: 0; color: #0088cc;">CLICK</h4>
+            <img src="data:image/png;base64,{{ click_qr }}" alt="Click QR">
+            <a href="{{ click_url }}" class="btn-pay btn-click">Click'da ochish</a>
+        </div>
+        <div class="pay-box">
+            <h4 style="margin: 0; color: #19c3af;">Payme</h4>
+            <img src="data:image/png;base64,{{ payme_qr }}" alt="Payme QR">
+            <a href="{{ payme_url }}" class="btn-pay btn-payme">Payme'da ochish</a>
+        </div>
+    </div>
+</div>
+
+<!-- Mobil Ilova Tanlash Modali -->
+<div class="modal" id="appModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="margin:0;">To'lov ilovasini tanlang</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="app-list">
+            <a href="{{ click_url }}" class="app-item">
+                <span>🔹 Click Evolution</span>
+                <span>➔</span>
+            </a>
+            <a href="{{ payme_url }}" class="app-item">
+                <span>🟢 Payme</span>
+                <span>➔</span>
+            </a>
+            <a href="{{ uzqr_url }}" class="app-item">
+                <span>🟣 Uzum Bank / Boshqa</span>
+                <span>➔</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById('appModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('appModal').style.display = 'none';
+    }
+    // Modal tashqarisiga bosilganda yopish
+    window.onclick = function(event) {
+        var modal = document.getElementById('appModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+
+</body>
+</html>aw,awwdjf

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Online Shop{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- PWA Meta va Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#1d4ed8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --primary-2: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 180px, #f8fafc 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        a { text-decoration: none; }
+        
+        /* Navigation Topbar */
+        .topbar {
+            position: sticky; top: 0; z-index: 1020;
+            background: rgba(15, 23, 42, 0.96);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+        }
+        .topbar-inner {
+            max-width: 1200px; margin: 0 auto; padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+        }
+        .brand {
+            color: #fff; font-weight: 800; font-size: 1.35rem; letter-spacing: 0.03em;
+        }
+        .brand:hover { color: #f8fafc; }
+        
+        .nav-links {
+            display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+        }
+        .nav-links a {
+            color: rgba(255,255,255,0.9);
+            padding: 8px 14px; border-radius: 999px; font-size: 0.95rem;
+            transition: 0.2s ease;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .nav-links a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-links .pill {
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            color: #fff; font-weight: 700;
+        }
+        .nav-links .seller-pill {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff; font-weight: 700;
+        }
+        
+        /* Back Button */
+        .back-btn {
+            color: #fff; font-weight: 600; font-size: 0.95rem;
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 999px;
+            transition: 0.2s ease;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.25); color: #fff; }
+
+        .container-custom {
+            max-width: 1200px; margin: 0 auto; padding: 24px 18px 48px; width: 100%; flex: 1;
+        }
+        
+        /* Messages Flash-Style */
+        .messages-container { margin-bottom: 20px; }
+        .alert-msg {
+            padding: 12px 18px; border-radius: 12px; margin-bottom: 10px;
+            font-size: 0.95rem; font-weight: 600;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .alert-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .alert-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+        /* Mobile Bottom Nav */
+        .bottom-nav {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .bottom-nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            text-decoration: none; color: #64748b; font-size: 0.75rem; font-weight: 600;
+        }
+        .bottom-nav-item.active, .bottom-nav-item:hover { color: #1d4ed8; }
+        .bottom-nav-item span { font-size: 1.25rem; margin-bottom: 2px; }
+
+        @media (max-width: 768px) {
+            body { padding-bottom: 60px; }
+            .bottom-nav { display: flex; }
+        }
+
+        .footer {
+            max-width: 1200px; margin: 0 auto; padding: 24px 18px 36px; color: var(--muted);
+            font-size: 0.92rem; text-align: center; margin-top: auto; width: 100%;
+        }
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Header Topbar -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="d-flex align-items-center gap-2">
+                {% if 'chat' in request.path or 'profile' in request.path %}
+                    <a href="javascript:history.back()" class="back-btn" title="Orqaga">
+                        <i class="bi bi-arrow-left"></i> Orqaga
+                    </a>
+                {% endif %}
+                <a href="{% url 'home' %}" class="brand">🛍️ Online Shop</a>
+            </div>
+
+            <nav class="nav-links">
+                <a href="{% url 'home' %}"><i class="bi bi-house-door"></i> Bosh sahifa</a>
+                <a href="{% url 'video_feed' %}"><i class="bi bi-camera-reels"></i> Reels</a>
+                <a href="{% url 'cart_detail' %}"><i class="bi bi-cart3"></i> Savatcha</a>
+                <a href="{% url 'chat' %}"><i class="bi bi-chat-dots"></i> Chat</a>
+                
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'profile' request.user.username %}"><i class="bi bi-person"></i> Profil</a>
+                    {% if request.user.profile.role == 'seller' %}
+                        <a href="{% url 'seller_dashboard' %}" class="seller-pill"><i class="bi bi-shop"></i> Sotuvchi paneli</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="pill"><i class="bi bi-box-arrow-right"></i> Chiqish</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="pill">Kirish</a>
+                    <a href="{% url 'register' %}">Ro'yxatdan o'tish</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Asosiy Kontent -->
+    <main class="container-custom">
+        <!-- Flash Xabarlar -->
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert-msg alert-{{ message.tags }}">
+                        <span>{{ message }}</span>
+                        <span style="cursor:pointer;" onclick="this.parentElement.remove();">&times;</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Mobile Bottom Nav -->
+   <!-- Mobile Bottom Nav (Buyurtma tugmasi olib tashlandi) -->
+<nav class="bottom-nav">
+    <a href="{% url 'home' %}" class="bottom-nav-item">
+        <span>🏠</span> Bosh sahifa
+    </a>
+    <a href="{% url 'cart_detail' %}" class="bottom-nav-item">
+        <span>🛒</span> Savatcha
+    </a>
+    <a href="{% url 'chat' %}" class="bottom-nav-item">
+        <span>💬</span> AI Chat
+    </a>
+</nav>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Online Shop · Zamonaviy online do'kon
+    </footer>
+
+    <!-- AI Chat Tugmasi -->
+    <div id="ai-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button id="chat-toggle-btn" onclick="toggleChat()" style="background: #1d4ed8; color: white; border: none; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            🤖
+        </button>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- PWA va AI Chat Scriptlari -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then((reg) => console.log('Service Worker ishga tushdi!'))
+                    .catch((err) => console.log('SW xatolik:', err));
+            });
+        }
+
+        function toggleChat() {
+            const box = document.getElementById('chat-box');
+            if (box) {
+                box.style.display = box.style.display === 'none' || box.style.display === '' ? 'flex' : 'none';
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const messages = document.getElementById('chat-messages');
+            if (!input || !messages) return;
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            messages.innerHTML += `<div style="background: #1d4ed8; color: white; padding: 10px 14px; border-radius: 12px; max-width: 80%; align-self: flex-end; font-size: 14px; margin-bottom: 8px;">${text}</div>`;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            const loadingId = 'loading-' + Date.now();
+            messages.innerHTML += `<div id="${loadingId}" style="background: #f1f5f9; padding: 10px 14px; border-radius: 12px; max-width: 80%; align-self: flex-start; font-size: 14px; color: #64748b; margin-bottom: 8px;">O'ylamoqda...</div>`;
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const csrftoken = getCookie('csrftoken');
+                const response = await fetch('/api/chat/', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken 
+                    },
+                    body: JSON.stringify({ message: text })
+                });
+                
+                const data = await response.json();
+                const loadingElement = document.getElementById(loadingId);
+                if (loadingElement) loadingElement.remove();
+
+                if (response.ok && data.reply) {
+                    messages.innerHTML += `<div style="background: #f1f5f9; color: #1e293b; padding: 10px 14px; border-radius: 12px; max-width: 80%; align-self: flex-start; font-size: 14px; margin-bottom: 8px;">${data.reply}</div>`;
+                } else {
+                    messages.innerHTML += `<div style="background: #fee2e2; color: #dc2626; padding: 10px 14px; border-radius: 12px; max-width: 80%; align-self: flex-start; font-size: 14px; margin-bottom: 8px;">Javob kelmadi: ${data.reply || 'Xatolik'}</div>`;
+                }
+            } catch (e) {
+                const loadingElement = document.getElementById(loadingId);
+                if (loadingElement) loadingElement.remove();
+                messages.innerHTML += `<div style="background: #fee2e2; color: #dc2626; padding: 10px 14px; border-radius: 12px; max-width: 80%; align-self: flex-start; font-size: 14px; margin-bottom: 8px;">Tarmoqda xatolik.</div>`;
+            }
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Shop - Savatcha</title>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --primary-2: #2563eb;
+            --danger: #ef4444;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        a { text-decoration: none; }
+
+        /* Doimiy Topbar Menyu */
+        .topbar {
+            position: sticky; top: 0; z-index: 20;
+            background: rgba(15, 23, 42, 0.96);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+        }
+        .topbar-inner {
+            max-width: 1200px; margin: 0 auto; padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+        }
+        .brand { color: #fff; font-weight: 800; font-size: 1.35rem; }
+        .nav { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .nav a { color: rgba(255,255,255,0.9); padding: 8px 12px; border-radius: 999px; font-size: 0.95rem; }
+        .nav a:hover { background: rgba(255,255,255,0.08); }
+        .nav .pill { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; font-weight: 700; }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 18px; }
+        .cart-card { background: var(--card); padding: 24px; border-radius: 20px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+        .cart-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--line); gap: 15px; flex-wrap: wrap; }
+        .item-info { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .item-info img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; }
+        
+        .quantity-control { display: flex; align-items: center; gap: 8px; background: var(--bg); padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line); }
+        .qty-btn { background: #fff; border: 1px solid var(--line); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; color: var(--text); display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+        .qty-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .qty-val { font-weight: bold; min-width: 20px; text-align: center; }
+        
+        .btn-remove { color: var(--danger); font-size: 0.9rem; font-weight: bold; text-decoration: none; }
+        .total-box { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; }
+        .checkout-btn { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; padding: 12px 24px; border-radius: 12px; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Doimiy Menyu Bar -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">🛍️ Online Shop</div>
+            <nav class="nav">
+                <a href="{% url 'home' %}">Bosh sahifa</a>
+                <a href="{% url 'video_feed' %}">Reels</a>
+                <a href="{% url 'cart_detail' %}" class="pill">Savatcha</a>
+                <a href="{% url 'chat' %}">Chat</a>
+                {% if request.user.is_authenticated %}
+                    {% if request.user.profile and request.user.profile.role == 'seller' %}
+                        <a href="{% url 'seller_dashboard' %}">Sotuvchi paneli</a>
+                    {% endif %}
+                    <a href="{% url 'profile' request.user.username %}">Profil</a>
+                    <a href="{% url 'logout' %}">Chiqish</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Kirish</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="cart-card">
+            <h2>🛒 Sizning savatchangiz</h2>
+
+            {% if cart_items %}
+                {% for item in cart_items %}
+                    <div class="cart-item">
+                        <div class="item-info">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                            {% endif %}
+                            <div>
+                                <h4 style="margin:0 0 5px;">{{ item.product.name }}</h4>
+                                <small style="color: var(--muted);">
+                                    {% if item.color %}Rang: {{ item.color }} | {% endif %}
+                                    {% if item.size %}O'lcham: {{ item.size }}{% endif %}
+                                </small>
+                                <div style="font-weight: bold; margin-top: 4px;">{{ item.product.price }} so'm</div>
+                            </div>
+                        </div>
+
+                        <!-- Sonini ko'paytirish va kamaytirish (+ / -) -->
+                        <div class="quantity-control">
+                            <a href="{% url 'update_cart' item.id 'decrease' %}" class="qty-btn">-</a>
+                            <span class="qty-val">{{ item.quantity }}</span>
+                            <a href="{% url 'update_cart' item.id 'increase' %}" class="qty-btn">+</a>
+                        </div>
+
+                        <div>
+                            <a href="{% url 'remove_from_cart' item.id %}" class="btn-remove">❌ O'chirish</a>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="total-box">
+                    <span>Jami: {{ total_price }} so'm</span>
+                    <a href="{% url 'checkout' %}" class="checkout-btn">Buyurtma berish</a>
+                </div>
+            {% else %}
+                <p style="color: var(--muted);">Savatchangiz bo'sh.</p>
+                <a href="{% url 'home' %}" style="color: var(--primary); font-weight: bold;">← Xarid qilishga qaytish</a>
+            {% endif %}
+        </div>
+    </main>
+
+</body>
+</html>

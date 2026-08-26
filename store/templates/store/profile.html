@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.username }} - Profil</title>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; font-family: Arial, sans-serif; background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 180px, #f8fafc 100%);
+            color: var(--text);
+        }
+        .wrap { max-width: 980px; margin: 24px auto 44px; padding: 0 18px; }
+        
+        /* Orqaga tugmasi stili */
+        .back-nav {
+            margin-bottom: 16px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            border: 1px solid var(--line);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+            background: #1d4ed8;
+            color: #ffffff;
+            border-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0f172a, #1d4ed8 58%, #60a5fa 100%);
+            color: #fff; border-radius: 28px; box-shadow: var(--shadow); overflow: hidden;
+        }
+        .inner { padding: 28px; }
+        .profile-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+        .avatar {
+            width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center;
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); font-size: 2.2rem;
+        }
+        .meta h1 { margin: 0; font-size: clamp(1.8rem,2vw,2.6rem); }
+        .meta p { margin: 8px 0 0; color: rgba(255,255,255,0.82); }
+        .stats {
+            display: flex; gap: 18px; flex-wrap: wrap; margin-top: 18px;
+        }
+        .stat {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 14px; padding: 10px 14px; min-width: 120px;
+        }
+        .stat strong { display: block; font-size: 1.2rem; }
+        .section { margin-top: 26px; }
+        .section h2 { margin: 0 0 16px; font-size: 1.7rem; }
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+        }
+        .card {
+            background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; box-shadow: var(--shadow);
+        }
+        .thumb {
+            width: 100%; height: 180px; border-radius: 14px; overflow: hidden; margin-bottom: 12px;
+            background: linear-gradient(135deg, #dbeafe, #f8fafc); border: 1px solid var(--line);
+            display: grid; place-items: center; color: #94a3b8; font-size: 2rem;
+        }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .name { margin: 0; font-size: 1.1rem; }
+        .price { font-weight: 800; color: var(--primary); margin: 8px 0 10px; }
+        .empty {
+            background: var(--card); border: 1px dashed var(--line); border-radius: 18px; padding: 30px 20px;
+            text-align: center; color: var(--muted);
+        }
+        .top-btn {
+            display: inline-block; margin-top: 14px; background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 700;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <!-- Orqaga tugmasi -->
+        <div class="back-nav">
+            <a href="javascript:history.back()" class="back-btn">
+                ← Orqaga
+            </a>
+        </div>
+
+        <div class="hero">
+            <div class="inner">
+                <div class="profile-head">
+                    <div class="avatar">👤</div>
+                    <div class="meta">
+                        <h1>@{{ profile_user.username }}</h1>
+                        <p>{{ profile.role|default:'User' }} · {{ profile_user.email|default:'Email mavjud emas' }}</p>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat"><strong>{{ products|length }}</strong><span>Mahsulot</span></div>
+                    <div class="stat"><strong>{{ profile_user.date_joined|date:'Y' }}</strong><span>A'zolik yili</span></div>
+                </div>
+            </div>
+        </div>
+
+        <section class="section">
+            <h2>Mahsulotlar</h2>
+            {% if products %}
+                <div class="products-grid">
+                    {% for product in products %}
+                        <div class="card">
+                            <div class="thumb">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                                {% else %}
+                                    🛍️
+                                {% endif %}
+                            </div>
+                            <h3 class="name">{{ product.name }}</h3>
+                            <div class="price">{{ product.price }} so'm</div>
+                            <a class="top-btn" href="{% url 'add_to_cart' product.id %}">Savatga qo'shish</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">Bu foydalanuvchining hali mahsuloti yo'q.</div>
+            {% endif %}
+        </section>
+    </div>
+</body>
+</html>

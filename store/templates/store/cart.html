@@ -1,0 +1,240 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Savatcha — Online Shop{% endblock %}
+
+{% block head %}
+<style>
+    .wrap { max-width: 980px; margin: 20px auto; padding: 0 10px; }
+    .shell {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    .top {
+        padding: 26px 28px 20px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+    .top h1 { margin: 0; font-size: clamp(1.7rem, 2vw, 2.3rem); }
+    .link { color: var(--primary); font-weight: 700; text-decoration: none; }
+    .content { padding: 26px 28px 30px; }
+    .cart-list { display: grid; gap: 18px; }
+    .item {
+        display: grid;
+        grid-template-columns: 90px 1fr auto auto auto;
+        align-items: center;
+        gap: 18px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #f8fafc;
+    }
+    .thumb {
+        width: 90px; height: 90px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #dbeafe, #f8fafc);
+        display: flex; align-items: center; justify-content: center;
+        color: #94a3b8; font-size: 2rem; border: 1px solid var(--line);
+        overflow: hidden;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .meta h3 { margin: 0 0 6px; font-size: 1.2rem; }
+    .muted { color: var(--muted); margin: 0; }
+    
+    .qty-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        overflow: hidden;
+    }
+    .qty-btn {
+        background: transparent;
+        border: none;
+        padding: 8px 14px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--text);
+        cursor: pointer;
+    }
+    .qty-btn:hover { background: #f1f5f9; }
+    .qty-count {
+        padding: 0 10px;
+        font-weight: 700;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .price { font-weight: 800; color: var(--primary-2); font-size: 1.1rem; }
+    .remove {
+        display: inline-block; padding: 10px 14px; border-radius: 10px;
+        background: #fff1f2; color: var(--danger); border: 1px solid #fecdd3; font-weight: 700;
+        cursor: pointer; text-decoration: none;
+    }
+    .remove:hover { background: #ffe4e6; }
+    .summary {
+        margin-top: 22px; padding: 20px 18px; border: 1px solid var(--line); border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap;
+    }
+    .grand { font-size: 1.15rem; font-weight: 800; }
+    .grand strong { color: var(--success); }
+    .cta {
+        display: inline-block;
+        background-color: #16a34a !important;
+        color: #ffffff !important;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-weight: 800;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+    .cta:hover {
+        background-color: #15803d !important;
+        transform: translateY(-1px);
+    }
+    .empty {
+        padding: 34px 24px; text-align: center; background: #f8fafc; border: 1px dashed var(--line);
+        border-radius: 18px; color: var(--muted);
+    }
+    @media (max-width: 680px){ 
+        .item { grid-template-columns: 1fr; justify-items: start; } 
+        .thumb { width: 100%; height: 220px; } 
+        .top { flex-direction: column; align-items: flex-start; } 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <div class="shell">
+        <div class="top">
+            <h1>🛒 Savatingiz</h1>
+            <a class="link" href="{% url 'home' %}">← Do'konga qaytish</a>
+        </div>
+
+        <div class="content">
+            {% if cart_items %}
+                <div class="cart-list" id="cart-list">
+                    {% for item in cart_items %}
+                    <div class="item" id="item-row-{{ item.id }}">
+                        <div class="thumb">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                                🛍️
+                            {% endif %}
+                        </div>
+
+                        <div class="meta">
+                            <h3>{{ item.product.name }}</h3>
+                            <p class="muted">Dona narxi: {{ item.product.price }} so'm</p>
+                        </div>
+
+                        <div class="qty-control">
+                            <button type="button" class="qty-btn" onclick="updateCart({{ item.id }}, 'decrease')">-</button>
+                            <span class="qty-count" id="qty-{{ item.id }}">{{ item.quantity }}</span>
+                            <button type="button" class="qty-btn" onclick="updateCart({{ item.id }}, 'increase')">+</button>
+                        </div>
+
+                        <div class="price" id="cost-{{ item.id }}" data-price="{{ item.product.price }}">
+                            {{ item.quantity }} x {{ item.product.price }} so'm
+                        </div>
+
+                        <a href="{% url 'remove_from_cart' item.id %}" class="remove" onclick="return confirm('Savatdan o’chirilsinmi?');">
+                            O'chirish
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary" id="cart-summary">
+                    <div class="grand">Jami summa: <strong id="total-price">{{ total_price }}</strong> so'm</div>
+                    <a class="cta" href="{% url 'checkout' %}">Buyurtma berish →</a>
+                </div>
+            {% else %}
+                <div class="empty">
+                    Savatingiz hozircha bo'sh. Mahsulotlarni tanlab xarid qilishni boshlang.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateCart(itemId, action) {
+        const formData = new FormData();
+        formData.append('action', action);
+
+        fetch(`/cart/update-ajax/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Tarmoq javobida xatolik bor.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'ok') {
+                // Miqdorni yangilash
+                document.getElementById(`qty-${itemId}`).innerText = data.quantity;
+                
+                // Mahsulotning umumiy narx satrini to'g'ri shakllantirish
+                const costElem = document.getElementById(`cost-${itemId}`);
+                if (data.item_cost) {
+                    costElem.innerText = typeof data.item_cost === 'string' && data.item_cost.includes("so'm")
+                        ? data.item_cost 
+                        : `${data.item_cost} so'm`;
+                } else if (costElem.dataset.price) {
+                    costElem.innerText = `${data.quantity} x ${costElem.dataset.price} so'm`;
+                }
+
+                // Umumiy summani yangilash
+                document.getElementById('total-price').innerText = data.total_price;
+            } else if (data.status === 'removed') {
+                const itemRow = document.getElementById(`item-row-${itemId}`);
+                if (itemRow) itemRow.remove();
+                
+                document.getElementById('total-price').innerText = data.total_price;
+                
+                // Agar savatda mahsulot qolmagan bo'lsa, bo'sh savat holatiga reload qilish
+                if (document.querySelectorAll('.cart-list .item').length === 0) {
+                    location.reload();
+                }
+            }
+        })
+        .catch(error => console.error('AJAX Xatolik:', error));
+    }
+</script>
+{% endblock %}
