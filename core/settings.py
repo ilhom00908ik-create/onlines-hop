@@ -22,11 +22,11 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = ['onlines-hop.onrender.com', 'localhost', '127.0.0.1']
 
 # Real domenlar uchun CSRF xavfsizligi
-CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS', 
-    default='http://localhost:8000,http://127.0.0.1:8000', 
-    cast=lambda v: [s.strip() for s in v.split(',')]
-)
+CSRF_TRUSTED_ORIGINS = [
+    'https://onlines-shop.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 
 # Application definition
