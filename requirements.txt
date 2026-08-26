@@ -10,3 +10,16 @@ requests
 google-genai
 pillow
 qrcode
+Django
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+django-jazzmin
+gunicorn
+psycopg2-binary
+python-decouple
+requests
+google-genai
+pillow
+qrcode
+drf-spectacular
