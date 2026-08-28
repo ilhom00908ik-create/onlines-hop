@@ -16,8 +16,7 @@ def _local_shop_assistant(message):
     from .models import Product
 
     text = (message or '').lower()
-    products = Product.objects.filter(status='approved')[:5]
-
+    products = Product.objects.all()[:5]
     # Mahsulotlar / narxlar haqidagi savollar
     product_keywords = ('mahsulot', 'narx', 'qancha', 'nima bor', 'katalog',
                         'tovar', 'product', 'price', 'telefon')
@@ -175,7 +174,7 @@ def get_top_products(limit=5):
     from .models import Product
     try:
         return Product.objects.filter(
-            status='approved'
+            is_active=True  # status='approved' o'rniga haqiqiy maydonni yozing
         ).order_by('-created_at')[:limit]
     except Exception as e:
         logger.error(f"Top mahsulotlarni olishda xatolik: {str(e)}")
