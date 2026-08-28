@@ -72,17 +72,15 @@ def ask_gemini(prompt_text):
     try:
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',  # <-- Model nomi yangilandi
             contents=prompt_text,
         )
         logger.info(f"Gemini so'rovi muvaffaqiyatli: {prompt_text[:50]}...")
         return response.text
-    except genai.APIError as e:
-        logger.error(f"Gemini API xatosi: {str(e)}")
-        return f"Gemini API xatosi: {str(e)}"
     except Exception as e:
         logger.error(f"Gemini so'rovida xatolik: {str(e)}")
-        return f"Xatolik yuz berdi: {str(e)}"
+        # API xato bersa ham sayt qulab tushmasligi uchun mahalliy yordamchiga o'tkazamiz
+        return _local_shop_assistant(prompt_text)
 
 
 def send_telegram_order_notification(order):
