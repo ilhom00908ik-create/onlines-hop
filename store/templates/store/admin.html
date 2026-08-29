@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Admin Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background-color: #000000;
+            color: #e70000;
+        }
+        .sidebar a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            display: block;
+            border-radius: 0.5rem;
+            margin-bottom: 0.25rem;
+            transition: all 0.2s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            color: #fff;
+            background-color: #334155;
+        }
+        .card-stat {
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Yon menyu (Sidebar) -->
+            <div class="col-md-3 col-lg-2 px-3 py-4 sidebar d-flex flex-column justify-content-between">
+                <div>
+                    <h4 class="text-white fw-bold mb-4 px-2"><i class="fas fa-store me-2 text-indigo"></i>Online Shop</h4>
+                    <div class="nav flex-column">
+                        <a href="#" class="active"><i class="fas fa-home me-2"></i> Bosh sahifa</a>
+                        <a href="{% url 'admin:index' %}"><i class="fas fa-cog me-2"></i> Asosiy Admin</a>
+                        <a href="#"><i class="fas fa-box me-2"></i> Mahsulotlar</a>
+                        <a href="#"><i class="fas fa-tags me-2"></i> Kategoriyalar</a>
+                        <a href="#"><i class="fas fa-shopping-cart me-2"></i> Buyurtmalar</a>
+                        <a href="#"><i class="fas fa-users me-2"></i> Foydalanuvchilar</a>
+                    </div>
+                </div>
+                <div class="px-2">
+                    <a href="/" class="text-danger"><i class="fas fa-sign-out-alt me-2"></i> Saytdan chiqish</a>
+                </div>
+            </div>
+
+            <!-- Asosiy qism -->
+            <div class="col-md-9 col-lg-10 ms-sm-auto px-4 py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Do'kon Boshqaruvi</h2>
+                    <span class="text-muted">Xush kelibsiz, {{ request.user.username }}!</span>
+                </div>
+
+                <!-- Statistik kartochkalar -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="card card-stat bg-white p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Jami Mahsulotlar</h6>
+                                    <h3 class="fw-bold mb-0">120</h3>
+                                </div>
+                                <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                                    <i class="fas fa-box fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-stat bg-white p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Buyurtmalar</h6>
+                                    <h3 class="fw-bold mb-0">35</h3>
+                                </div>
+                                <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                                    <i class="fas fa-shopping-cart fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-stat bg-white p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Mijozlar</h6>
+                                    <h3 class="fw-bold mb-0">85</h3>
+                                </div>
+                                <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jadval qismi -->
+                <div class="card card-stat bg-white p-4">
+                    <h5 class="mb-3 fw-bold">So'nggi qo'shilgan mahsulotlar</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nomi</th>
+                                    <th>Narxi</th>
+                                    <th>Kategoriya</th>
+                                    <th>Holati</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Misol Mahsulot</td>
+                                    <td>150,000 so'm</td>
+                                    <td>Elektronika</td>
+                                    <td><span class="badge bg-success">Sotuvda bor</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

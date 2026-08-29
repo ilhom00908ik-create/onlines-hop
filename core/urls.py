@@ -24,8 +24,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('store.urls')), # Barcha sahifalar (shu jumladan bosh sahifa) store.urls ga yo'naltiriladi
+    path('', include('store.urls')), # Barcha sahifalar store.urls ga yo'naltiriladi
 ]
 
+# Agar DEBUG = True bo'lsa, media va static fayllarni birga ulaymiz
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

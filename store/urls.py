@@ -1,5 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+
+# DRF Router orqali Wishlist API yo'lini ulash
+router = DefaultRouter()
+router.register(r'wishlist', views.WishlistViewSet, basename='wishlist')
+router.register(r'reviews', views.ReviewViewSet, basename='reviews')
+router.register(r'order-tracking', views.OrderStatusHistoryViewSet, basename='order-tracking')
 
 urlpatterns = [
     # 1. ASOSIY SAHIFALAR VA KATALOG
@@ -16,6 +23,7 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('cart/update-ajax/<int:item_id>/', views.cart_update_ajax, name='cart_update_ajax'),
     path('order/success/<int:order_id>/', views.order_success, name='order_success'),
+    path('wishlist/toggle/<int:product_id>/', views.toggle_wishlist, name='toggle_wishlist'),
     
     # 3. REELS VA CHAT
     path('reels/', views.video_feed, name='video_feed'),
@@ -34,12 +42,13 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     
-    # 6. AI VA TO'LOVLAR ('ai_chat' va 'ai_chat_api' ikkala nom ham qo'shildi)
+    # 6. AI VA TO'LOVLAR
     path('api/ai-chat/', views.ai_chat_api, name='ai_chat'),
     path('api/ai-chat/v1/', views.ai_chat_api, name='ai_chat_api'),
     path('payment/<int:order_id>/', views.order_payment_view, name='order_payment'),
     path('checkout/payment/<int:order_id>/', views.checkout_payment_view, name='checkout_payment'),
     path('checkout/complete/<int:order_id>/', views.confirm_payment_complete, name='confirm_payment_complete'),
 
-    
+    # 7. WISHLIST API (Qo'shildi)
+    path('api/', include(router.urls)),
 ]

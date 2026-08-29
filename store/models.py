@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils.safestring import mark_safe
 
-# Profile Model
+# Profil Modeli
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=50, choices=[('customer', 'Customer'), ('seller', 'Seller')], default='customer')
@@ -88,21 +89,36 @@ class ProductImage(models.Model):
         return f"{self.product.name} - Rasm"
 
 
-class Review(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating = models.PositiveIntegerField(default=5)
-    comment = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+# Sevimli mahsulotlar (Wishlist)
+class Wishlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists', verbose_name="Foydalanuvchi")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wishlisted_by', verbose_name="Mahsulot")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Qo'shilgan vaqti")
+
+    class Meta:
+        verbose_name = "Sevimli mahsulot"
+        verbose_name_plural = "Sevimli mahsulotlar"
+        unique_together = ('user', 'product')
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"
 
 
-class Wishlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
+# Sharhlar (Review)
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews', verbose_name="Mahsulot")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', verbose_name="Foydalanuvchi")
+    rating = models.PositiveIntegerField(default=5, verbose_name="Reyting (1-5)")
+    comment = models.TextField(verbose_name="Sharh matni")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Qo'shilgan vaqti")
+
+    class Meta:
+        verbose_name = "Sharh"
+        verbose_name_plural = "Sharhlar"
+        unique_together = ('product', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.product.name} ({self.rating} yulduz)"
 
 
 class Cart(models.Model):
@@ -119,19 +135,26 @@ class CartItem(models.Model):
 
 
 class ReelsVideo(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255, blank=True)
-    video = models.FileField(upload_to='reels/videos/')
-    views_count = models.PositiveIntegerField(default=0)
-    
-    # Videoga biriktirilgan mahsulot (Foreign Key)
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='reels', null=True, blank=True)
-    
-    is_approved = models.BooleanField(default=True) # Videolar avtomat ko'rinsin desangiz True qiling
-    created_at = models.DateTimeField(auto_now_add=True)
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Foydalanuvchi")
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='reels', verbose_name="Bog'langan mahsulot") # <--- MANA SHUNI QO'SHING
+    title = models.CharField(max_length=255, verbose_name="Sarlavha")
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Narxi") # <--- MANA SHUNI QO'SHING
+    description = models.TextField(blank=True, null=True, verbose_name="Tavsif")
+    video = models.FileField(upload_to='reels/videos/', verbose_name="Video fayl")
+    thumbnail = models.ImageField(upload_to='reels/thumbnails/', blank=True, null=True, verbose_name="Muqova (Thumbnail)")
+    is_approved = models.BooleanField(default=False, verbose_name="Tasdiqlangan")
+    views_count = models.PositiveIntegerField(default=0, verbose_name="Ko'rishlar soni")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Qo'shilgan vaqti")
+   
     def __str__(self):
-        return f"Reel: {self.title or self.id}"
+        return self.title
+
+    def video_preview(self):
+        if self.video:
+            return mark_safe(f'<video width="300" controls><source src="{self.video.url}" type="video/mp4">Sizning brauzer video formatni qo\'llab-quvvatlamaydi.</video>')
+        return "Video mavjud emas"
+    video_preview.short_description = "Video Ko'rinishi"
+
 
 class ReelLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -183,3 +206,52 @@ class PaymentTransaction(models.Model):
 
     def __str__(self):
         return f"Transaction {self.transaction_id} - {self.status}"
+
+
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True, verbose_name="Promokod")
+    discount_percent = models.PositiveIntegerField(default=0, verbose_name="Chegirma foizi (%)")
+    active = models.BooleanField(default=True, verbose_name="Faolligi")
+    valid_from = models.DateTimeField(verbose_name="Boshlanish vaqti")
+    valid_to = models.DateTimeField(verbose_name="Tugash vaqti")
+
+    class Meta:
+        verbose_name = "Promokod"
+        verbose_name_plural = "Promokodlar"
+
+    def __str__(self):
+        return f"{self.code} ({self.discount_percent}%)"
+
+
+class OrderStatusHistory(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Buyurtma qabul qilindi'),
+        ('processing', 'Tayyorlanmoqda'),
+        ('shipped', 'Yetkazib berishga chiqarildi'),
+        ('delivered', 'Yetkazib berildi'),
+        ('cancelled', 'Bekor qilindi'),
+    ]
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_history', verbose_name="Buyurtma")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, verbose_name="Status")
+    note = models.TextField(blank=True, null=True, verbose_name="Izoh")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="O'zgartirilgan vaqti")
+
+    class Meta:
+        verbose_name = "Buyurtma tarixi"
+        verbose_name_plural = "Buyurtma tarixi"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Buyurtma #{self.order.id} - {self.get_status_display()}"
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Foydalanuvchi")
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, verbose_name="Mahsulot")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Qo'shilgan vaqti")
+
+class Meta:
+        unique_together = ('user', 'product') # Bir mahsulotni ikki marta qo'shib bo'lmaydi
+
+def __str__(self):
+        return f"{self.user.username} - {self.product.title}"

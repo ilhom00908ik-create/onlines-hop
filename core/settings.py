@@ -1,3 +1,4 @@
+
 """
 Django settings for core project.
 Optimized for Production & Dynamic Payments.
@@ -18,8 +19,8 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-i85!#n=9#^i^4d%$)b-kp
 # Production'da HAR DOIM False bo'lishi kerak
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-# Server IP yoki Domenizni .env orqali belgilang (Masalan: ALLOWED_HOSTS=yourdomain.com,123.45.67.89)
-ALLOWED_HOSTS = ["*"]
+# Server IP yoki Domenizni .env orqali belgilang
+ALLOWED_HOSTS = ['onlines-shop.onrender.com', '.onrender.com', 'localhost', '127.0.0.1']
 
 # Real domenlar uchun CSRF xavfsizligi
 CSRF_TRUSTED_ORIGINS = [
@@ -27,6 +28,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -128,7 +131,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Static Files Configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 
 # JWT Configuration
@@ -219,7 +224,6 @@ PAYME_SECRET_KEY = config('PAYME_SECRET_KEY', default='')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 # Jazzmin Admin Panel Configuration
 JAZZMIN_SETTINGS = {
     "site_title": "Online Shop Admin",
@@ -227,11 +231,16 @@ JAZZMIN_SETTINGS = {
     "site_brand": "Online Shop Boshqaruvi",
     "welcome_sign": "Xush kelibsiz! Mahsulot va buyurtmalarni boshqarish paneli",
     
-    "search_model": ["store.Product"],
+    # Login sahifasi uchun qo'shimcha dizayn sozlamalari
+    "login_logo": None,  # O'z logotipingiz bo'lsa yo'lini ko'rsatishingiz mumkin (masalan: "images/logo.png")
+    "login_logo_dark": None,
+    "site_logo_classes": "img-circle",
+    "auth_logo": "",
+    
+    # Qolgan mavjud sozlamalaringiz...
     "navigation_expanded": True,
     "show_sidebar": True,
     "user_avatar": None,
-
     "topmenu_links": [
         {"name": "Bosh sahifa", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "Saytga o'tish", "url": "/"},
@@ -239,31 +248,17 @@ JAZZMIN_SETTINGS = {
     "icons": {
         "auth.user": "fas fa-user-tie",
         "auth.Group": "fas fa-users",
-        "store.Product": "fas fa-box",
-        "store.Category": "fas fa-tags",
-        "store.Order": "fas fa-shopping-cart",
-        "store.OrderItem": "fas fa-list-ol",
-        "store.Brand": "fas fa-copyright",
-        "store.Reel": "fas fa-film",
-        "store.ReelComment": "fas fa-comments",
-        "store.ReelLike": "fas fa-heart",
-        "store.Cart": "fas fa-shopping-basket",
-        "store.CartItem": "fas fa-cart-plus",
-        "store.Profile": "fas fa-id-card",
-        "store.ChatMessage": "fas fa-comment-dots",
+        "store.product": "fas fa-box",
+        "store.category": "fas fa-tags",
+        "store.order": "fas fa-shopping-cart",
     },
     "changeform_format": "horizontal_tabs",
+    "custom_css": "https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css",
+    "custom_js": "https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js",
 }
 
+# Yangi talabga moslashtirilgan UI tweaks
 JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
-    "dark_mode_theme": "darkly",
+    "default_theme_mode": "dark",
 }
-ALLOWED_HOSTS = ['onlines-shop.onrender.com', '.onrender.com', 'localhost', '127.0.0.1']
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://onlines-shop.onrender.com',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-]
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

@@ -42,10 +42,13 @@ from .serializers import (
     UserLoginSerializer,
     AuthTokenSerializer,
     ProductVariantSerializer,
+    Review, CouponSerializer, Coupon,
+    OrderStatusHistory,
+    OrderStatusHistorySerializer
 )
 from .utils import ask_gemini, send_telegram_order_notification
 from django.http import JsonResponse
-from .models import Order, OrderItem, Product
+from .models import Order, OrderItem, Product , Wishlist
 import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -70,6 +73,7 @@ from rest_framework.decorators import action
 from .services import send_telegram_notification, generate_payment_qr
 from django.conf import settings
 import urllib.parse
+from django.db.models import Min, Max
 
 User = get_user_model()
 
@@ -77,53 +81,69 @@ User = get_user_model()
 # ===== MAHSULOT TAFSILOTLARI =====
 
 def product_detail(request, pk):
-    """Mahsulot tafsilotlari, ko'rilgan va ommabop mahsulotlar"""
     product = get_object_or_404(Product, pk=pk)
-
-    product.views_count += 1
-    product.save(update_fields=['views_count'])
-
-    # Yaqinda ko'rilganlar (Session orqali oxirgi 20 ta)
-    recently_viewed_ids = request.session.get('recently_viewed', [])
-    if pk in recently_viewed_ids:
-        recently_viewed_ids.remove(pk)
-    recently_viewed_ids.insert(0, pk)
-    request.session['recently_viewed'] = recently_viewed_ids[:20]
-
-    recently_viewed_products = Product.objects.filter(id__in=recently_viewed_ids).exclude(id=pk)
-    similar_products = Product.objects.filter(category=product.category).exclude(id=pk)[:10] if product.category else []
-    popular_products = Product.objects.exclude(id=pk).order_by('-views_count')[:10]
-    reviews = product.reviews.all() if hasattr(product, 'reviews') else []
-
+    reviews = product.reviews.all()
+    
+    if request.method == 'POST' and request.user.is_authenticated:
+        rating = request.POST.get('rating', 5)
+        comment = request.POST.get('comment')
+        Review.objects.update_or_create(
+            product=product, user=request.user,
+            defaults={'rating': rating, 'comment': comment}
+        )
+        return redirect('product_detail', pk=pk)
+        
     context = {
         'product': product,
         'reviews': reviews,
-        'similar_products': similar_products,
-        'viewed_products': recently_viewed_products,
-        'popular_products': popular_products,
     }
     return render(request, 'store/product_detail.html', context)
 
 
 # ===== SAHIFALAR =====
-
 def home_view(request):
-    """Bosh sahifa"""
-    products = Product.objects.filter(status='True').select_related('seller', 'category', 'brand')
-    categories = Category.objects.all()
+    query = request.GET.get('q', '')
+    category_id = request.GET.get('category', '')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    
+    products = Product.objects.all()
 
-    selected_category = request.GET.get('category')
-    if selected_category:
-        products = products.filter(category_id=selected_category)
+    # Qidiruv
+    if query:
+        products = products.filter(name__icontains=query)
+
+    # Topilgan mahsulotlar ichidan eng arzon va eng qimmat narxni aniqlash
+    price_range = products.aggregate(min_p=Min('price'), max_p=Max('price'))
+    absolute_min = price_range['min_p'] or 0
+    absolute_max = price_range['max_p'] or 0
+
+    # Narx bo'yicha filtrni qo'llash
+    if min_price:
+        products = products.filter(price__gte=min_price)
+    if max_price:
+        products = products.filter(price__lte=max_price)
+
+    # Turkum bo'yicha filtr
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    categories = Category.objects.all()
+    brands = Brand.objects.all()  # <-- MUHIM: Brendlarni bazadan olib kelamiz
 
     context = {
         'products': products,
         'categories': categories,
-        'selected_category': selected_category,
+        'brands': brands,           # <-- MUHIM: Shablonga uzatamiz
+        'query': query,
+        'selected_category': category_id,
+        'absolute_min': absolute_min,
+        'absolute_max': absolute_max,
+        'min_price': min_price,
+        'max_price': max_price,
+        'total_products': products.count(),
     }
     return render(request, 'store/home.html', context)
-
-
 def video_feed(request):
     """Reels orqali savdo qilish sahifasi"""
     # select_related('product') orqali mahsulot ma'lumotlarini tezkor yuklaymiz
@@ -176,18 +196,19 @@ def chat_view(request):
 
 
 def profile_view(request, username):
-    """Profilni ko'rish"""
-    profile_user = get_object_or_404(User, username=username)
-    profile, created = Profile.objects.get_or_create(user=profile_user)
+    # Foydalanuvchini topish
+    user_profile = get_object_or_404(User, username=username)
     
-    products = []
-    if profile.role == 'seller':
-        products = Product.objects.filter(seller=profile_user, status='approved')
+    # Sevimli mahsulotlar
+    wishlists = Wishlist.objects.filter(user=user_profile)
+    
+    # Oxirgi 5 ta xarid qilingan buyurtmalar va ularning status tarixi
+    recent_orders = Order.objects.filter(user=user_profile).order_by('-created_at')[:5]
     
     context = {
-        'profile_user': profile_user,
-        'profile': profile,
-        'products': products,
+        'user_profile': user_profile,
+        'wishlists': wishlists,
+        'recent_orders': recent_orders,
     }
     return render(request, 'store/profile.html', context)
 
@@ -949,9 +970,14 @@ def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     # Mahsulotning barcha rasmlarini olish
     gallery_images = product.images.all()
+    
+    # Omborda kam qolganlari boshida, ko'p qolganlari oxirida keladigan qilib 7-8 qator (taxminan 28-32 ta) mahsulotni olamiz
+    related_products = Product.objects.exclude(pk=product.pk).order_by('stock')[:32]
+
     return render(request, 'store/product_detail.html', {
         'product': product,
-        'gallery_images': gallery_images
+        'gallery_images': gallery_images,
+        'related_products': related_products
     })
 
 def seller_profile(request, pk):
@@ -1179,3 +1205,49 @@ def confirm_payment_complete(request, order_id):
         return redirect('home')
         
     return redirect('home')
+
+
+class WishlistViewSet(viewsets.ModelViewSet):
+    serializer_class = WishlistSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Wishlist.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class CouponViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Coupon.objects.filter(active=True)
+    serializer_class = CouponSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class OrderStatusHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = OrderStatusHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return OrderStatusHistory.objects.all()
+        return OrderStatusHistory.objects.filter(order__user=user)
+
+def toggle_wishlist(request, product_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'unauthorized'}, status=401)
+    
+    product = get_object_or_404(Product, id=product_id)
+    wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
+    
+    if not created:
+        wishlist_item.delete()
+        added = False
+    else:
+        added = True
+        
+    return JsonResponse({'success': True, 'added': added})

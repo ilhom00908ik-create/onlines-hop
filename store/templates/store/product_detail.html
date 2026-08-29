@@ -75,12 +75,13 @@
         /* Pastki bloklar va Grid */
         .section-title { font-size: 1.3rem; margin: 40px 0 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
-        .mini-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .mini-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
         .mini-card:hover { transform: translateY(-4px); box-shadow: 0 22px 40px rgba(15, 23, 42, 0.12); }
         .mini-thumb { height: 140px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .mini-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .mini-title { font-weight: bold; font-size: 0.95rem; margin: 10px 0 4px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .mini-price { color: var(--primary); font-weight: bold; font-size: 0.9rem; }
+        .mini-stock { font-size: 0.78rem; font-weight: 600; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -129,11 +130,11 @@
                         {% endif %}
 
                         <!-- Qo'shimcha rasmlar -->
-                        {% for img in product.images.all %}
+                        {% for img in gallery_images %}
                             <div class="swiper-slide"><img src="{{ img.image.url }}" alt="{{ product.name }}"></div>
                         {% endfor %}
 
-                        {% if not product.image and not product.images.exists and not product.video %}
+                        {% if not product.image and not gallery_images and not product.video %}
                             <div class="swiper-slide"><span style="font-size:3rem;">🛍️</span></div>
                         {% endif %}
                     </div>
@@ -208,9 +209,9 @@
         </div>
         {% endif %}
 
-        <!-- 1. O'xshash Mahsulotlar Bloki (Kategoriya bo'yicha) -->
+        <!-- Ombordagi qoldiq bo'yicha tartiblangan tavsiya etilgan mahsulotlar (7-8 qator) -->
         {% if related_products %}
-            <div class="section-title">📦 O'xshash mahsulotlar</div>
+            <div class="section-title">📦 Tavsiya etilgan mahsulotlar (Ombor qoldig'i bo'yicha)</div>
             <div class="grid">
                 {% for item in related_products %}
                     <a href="{% url 'product_detail' item.id %}" class="mini-card">
@@ -219,38 +220,9 @@
                         </div>
                         <div class="mini-title">{{ item.name }}</div>
                         <div class="mini-price">{{ item.price }} so'm</div>
-                    </a>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <!-- 2. Ommabop Mahsulotlar Bloki -->
-        {% if popular_products %}
-            <div class="section-title">🔥 Ommabop mahsulotlar</div>
-            <div class="grid">
-                {% for item in popular_products %}
-                    <a href="{% url 'product_detail' item.id %}" class="mini-card">
-                        <div class="mini-thumb">
-                            {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}🛍️{% endif %}
+                        <div class="mini-stock" style="{% if item.stock <= 5 %}color: #ef4444;{% else %}color: var(--muted);{% endif %}">
+                            Omborda: {{ item.stock }} ta
                         </div>
-                        <div class="mini-title">{{ item.name }}</div>
-                        <div class="mini-price">{{ item.price }} so'm</div>
-                    </a>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <!-- 3. Siz Ko'rgan Mahsulotlar Bloki -->
-        {% if viewed_products %}
-            <div class="section-title">👁️ Oxirgi ko'rgan mahsulotlaringiz</div>
-            <div class="grid">
-                {% for item in viewed_products %}
-                    <a href="{% url 'product_detail' item.id %}" class="mini-card">
-                        <div class="mini-thumb">
-                            {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}🛍️{% endif %}
-                        </div>
-                        <div class="mini-title">{{ item.name }}</div>
-                        <div class="mini-price">{{ item.price }} so'm</div>
                     </a>
                 {% endfor %}
             </div>
@@ -266,5 +238,35 @@
             navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
         });
     </script>
+    <script>
+function toggleWishlist(productId, btn) {
+    fetch(`/wishlist/toggle/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+    })
+    .then(response => {
+        if (response.status === 401) {
+            alert('Iltimos, avval tizimga kiring!');
+            window.location.href = '{% url "login" %}';
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.success) {
+            if (data.added) {
+                btn.style.filter = 'none';
+                btn.style.opacity = '1';
+            } else {
+                btn.style.filter = 'grayscale(100%)';
+                btn.style.opacity = '0.4';
+            }
+        }
+    });
+}
+</script>
 </body>
 </html>

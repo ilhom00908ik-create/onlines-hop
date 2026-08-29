@@ -14,7 +14,11 @@ from .models import (
     ReelsVideo, 
     ReelComment, 
     ReelLike,
-    ChatMessage
+    ChatMessage,
+    Review,
+    Coupon,
+    OrderStatusHistory
+
 )
 
 User = get_user_model()
@@ -204,3 +208,42 @@ class ReelsVideoSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.likes.filter(user=request.user).exists()
         return False
+
+class WishlistSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_price = serializers.ReadOnlyField(source='product.price')
+
+    class Meta:
+        model = Wishlist
+        fields = ['id', 'product', 'product_name', 'product_price', 'created_at']
+        read_only_fields = ['user']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        product = validated_data['product']
+        wishlist, created = Wishlist.objects.get_or_create(user=user, product=product)
+        return wishlist
+class ReviewSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Review
+        fields = ['id', 'product', 'username', 'rating', 'comment', 'created_at']
+        read_only_fields = ['user']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+class CouponSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coupon
+        fields = ['id', 'code', 'discount_percent', 'active', 'valid_from', 'valid_to']
+
+
+class OrderStatusHistorySerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = OrderStatusHistory
+        fields = ['id', 'order', 'status', 'status_display', 'note', 'created_at']
